@@ -1,0 +1,22 @@
+.logout{
+    width: auto;
+    height: 40px;
+    line-height:40px;
+    text-align: right;
+    background-color: #3d8dbc;
+    padding-right: 10px;
+    margin: 10px 15px 0px;
+}
+
+.logout > button{
+    background-color: #3d8dbc;
+    border: 0px solid #fff;
+    font-size: 15px;
+    color: #fff;
+}
+
+.left{
+    float: left;
+    height: 40px;
+    margin-left: 10px;
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新建任务</title>
+</head>
+<style>
+    .title{
+        text-align: center;
+        opacity: 0.6;
+        color: darkorange;
+    }
+
+    .content{
+        text-align: center;
+    }
+
+    span{
+        font-size: 15px;
+        opacity: 0.8;
+        
+    }
+
+    input{
+        margin:10px auto 0px;
+        width: 90%;
+        height: 25px;
+        border:none;
+        border-bottom: 1px solid #000;
+        padding: 5px 0px 0px 10px;
+        font-size: 15px;
+        display: block;
+    }
+
+    textarea{
+        border:0;
+        border-radius:5px;
+        background-color:#fff;
+        width: 90%;
+        height: 150px;
+        padding: 5px 0px 0px 10px;
+        resize: none;
+        font-family: "微软雅黑";
+        font-size: 15px;
+    }
+
+    .shortselect{  
+        background:#fafdfe;  
+        height:28px;  
+        width:80px;  
+        line-height:28px;  
+        border:1px solid #9bc0dd;  
+        -moz-border-radius:2px;  
+        -webkit-border-radius:2px;  
+        border-radius:2px;  
+    }  
+
+    .filetype{
+        width: 90%;
+        margin: 0px auto;
+    }
+
+    .submit{
+        width: 90%;
+        text-align: center;
+    }
+
+    #addtask_btn{
+        width: 100px;
+        height: 40px;
+        border: none;
+        border-radius: 5px;
+        background-color: pink;
+        color: #fff;
+        font-size: 20px;
+        margin-top: 40px;
+    }
+    
+    .QRcontent{
+        text-align: center;
+    }
+    
+</style>
+<body>
+    <div>
+        <h1 class="title">添加任务</h1>
+    </div>
+
+    <div class="content">
+        <input type="text" placeholder="请输入任务标题" id="task_title">
+        <textarea placeholder="请输入任务描述" id="task_desc"></textarea>
+    </div>
+
+    <div class="filetype">
+        <span>请选择文件类型：</span>
+        <select class="shortselect">
+            <option>img</option>
+         </select>
+    </div>
+
+    <div class="submit">
+        <button id="addtask_btn">提交任务</button>
+    </div>
+    <script src="../js/jquery-3.6.1.min.js"></script>
+    <script src="../js/jquery.qrcode.min.js"></script>
+    <script>
+        $("#addtask_btn").click(()=>{
+            let title = $("#task_title").val()
+            let desc = $("#task_desc").val()
+            let fileContent = $(".shortselect").val()
+            console.log(title, desc, fileContent)
+            data = {"action":"add_task","data":{"title":title,"desc":desc,"fileContent":fileContent}}
+            console.log(data)
+            data = JSON.stringify(data)
+    
+            $.ajax({
+                url:"/mgr/task",
+                type:"post",
+                dataType:"json",
+                data:data,
+                success:(res)=>{
+                    if(res['ret']===0) {
+                        let host = window.location.host
+                        $("div").hide()
+                        let QRdiv = $("<div></div>")
+                        let QRtitle = $("<h1></h1>").text(title)
+                        let QRdesc = $("<p></p>").text(desc)
+    
+                        let QRcode = $("<div></div>").qrcode({
+                            width: 256,
+                            height: 256,
+                            text: "http://" + host + "/html/upload.html?id=" + res['id']
+                        });
+    
+                        QRdiv.addClass("QRcontent")
+                        QRdiv.append(QRtitle)
+                        QRdiv.append(QRdesc)
+                        QRdiv.append(QRcode)
+                        $("body").append(QRdiv)
+    
+                    } else {
+                        alert("创建失败,同名任务已存在")
+                        window.location.href = "./task.html"
+                    }
+                },
+                error:(res)=>{
+                    if (res.responseJSON['ret'] === 302) {
+                        setTimeout(()=>{
+                            alert(res.responseJSON['msg'])
+                        },200)
+                    }
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>

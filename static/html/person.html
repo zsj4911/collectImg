@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员</title>
+    <link rel="stylesheet" href="../css/mgr.css">
+    <style>
+    
+        .person{
+            margin: 20px 15px 0px;
+            background-color: #FFF;
+        }
+    
+        .person > button {
+            background-color: #FFF;
+            border: 1px solid #589679;
+            padding: 5px 10px;
+            color: #2c2c2c;
+        }
+    
+        .span{
+            display: block;
+            margin: 4px 0px;
+        }
+    
+        .box{
+            margin: 20px 15px 0px;
+            border: 1px solid #589679;
+            padding: 6px 15px;
+        }
+    
+        .del_btn{
+            margin: 5px 5px 0px 0px;
+            border: 1px solid plum;
+            background-color: #FFF;
+            padding: 3px 8px;
+        }
+    
+        .list_person{
+            text-align: center;
+            margin: 10px auto 15px;
+            padding: 6px 15px;
+            overflow-y: hidden;
+        }
+    
+        .all_name{
+            width: 50px;
+            height: 30px;
+            line-height: 30px;
+            border: 1px solid #3cb371;
+            border-radius: 5px;
+            margin: 5px 5px 2px 0px;
+            padding: 2px 10px;
+            display: inline-block;
+            text-align: center;
+        }
+
+</style>
+</head>
+
+<body>
+    <div class="logout">
+        <button type="button" class="left" id="person_btn">人员管理</button>
+        <button type="button" class="left" id="task_btn">任务管理</button>
+        <button type="button" id="logout_btn">注销登录</button>
+    </div>
+    
+    <div class="person"> 
+        <button type="file" id="add_person">+ 录入名单</button>
+        <input style="display: none" type="file"  id="getF" onchange="clickF()">
+        <button type="button" id="del_person">- 删除名单</button>
+    </div>
+    <div class="list_person" style="margin-top: 20px;">
+
+    </div>
+
+    <script src="../js/jquery-3.6.1.min.js"></script>
+    <script src="../js/dream-msg.min.js"></script>
+    <script>
+
+        $.ajax({
+            url: "/mgr/list_person",
+            type: "get",
+            dataType: 'json',  
+            success: (res) => {
+               
+                if (res['ret']===0) {
+                    res['data'].forEach(element => {
+                      
+                        let list_name = $("<span></span>").text(element)
+                        list_name.addClass("all_name")
+                        $(".list_person").append(list_name)
+                    });
+                } else {
+                    Dreamer.error(res['msg'],2000)
+                }
+            },
+            error:(res)=>{ 
+                if (res.responseJSON['ret'] === 302) {
+                    $("html").hide()
+                    setTimeout(()=>{
+                        alert(res.responseJSON['msg'])
+                        window.location.href = res.responseJSON['redirect']
+                    },200)
+                    
+                }
+            }
+        })
+
+        $("#person_btn").click(()=>{
+            window.location.href = "person.html"
+        })
+
+        $("#task_btn").click(()=>{
+            window.location.href = "task.html"
+        })
+
+        $("#add_person").click(()=>{
+            $("#getF").click();
+        })
+        
+
+        function clickF() {
+            let formdata = new FormData();
+            let file_obj = $("#getF")[0].files[0];
+            console.log(file_obj)
+
+            formdata.append('file_obj',file_obj);
+    
+            $.ajax({
+                url:"/mgr/add_person",
+                type:'post',
+                data:formdata,
+                processData: false ,
+                contentType: false,
+                success:(res)=> {
+                    if (res['ret']===0) {
+                        res['data'].forEach(element => {
+                            let list_name = $("<span></span>").text(element)
+                            list_name.addClass("all_name")
+                            $(".list_person").append(list_name)
+                        });
+                    } else {
+                        Dreamer.error(res['msg'],2000);
+                    }
+                },
+                error:(res)=>{
+                    alert("服务器繁忙！！！")
+                }
+            })
+        }
+
+        // 注销按钮的事件
+        $("#logout_btn").click(function () {
+            $.ajax({
+                url: "/mgr/signout", 
+                type: "get", 
+                dataType: 'json', 
+                success: (res) => {  
+                    alert("退出成功")
+                    window.location.href = "../login.html"
+                },
+                error:(res)=>{
+                    alert("网络错误,请检查你的网络^_^");
+                }
+            })
+        })
+
+        $("#del_person").click(()=>{
+            if(confirm("确认删除吗？")) {
+                $.ajax({
+                    url:"/mgr/del_person",
+                    type:"delete",
+                    dataType:"json",
+                    success: (res) => {
+                        if (res['ret']===0) {
+                            alert(res['msg'])
+                            window.location.reload()
+                        } else {
+                            alert(res['msg'])
+                        }
+                    },
+                    error:(res)=>{
+                        alert("无法连接到网络，请重试");
+                    }
+                })
+            }
+            
+        })
+
+    </script>
+</body>

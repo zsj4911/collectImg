@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务提交</title>
+    <style>
+    
+        .outside{
+            text-align: center;
+        }
+    
+        #preview{
+            display: inline; 
+            width: 50%; 
+            height: auto; 
+            margin-top: 10px;
+        }
+    
+        .box {
+            position: relative;
+            width: 80%;
+            height: 60px;
+            font-size: 30px;
+            line-height: 60px;
+            background-color: orange;
+            border-radius: 10px;
+            color: #fff;
+            margin: 10px auto 0px;
+        }
+    
+        input[type="file"] {
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    
+        .input_sumbit {
+            width: 80%;
+            height: 60px;
+            font-size: 30px;
+            line-height: 60px;
+            background-color: pink;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            display: block;
+            margin: 20px auto 0px;
+            
+        }
+    
+        #name{
+            width: 80%;
+            height: 50px;
+            font-size: 20px;
+            border: none;
+            border-bottom: 1px solid #000;
+            color: #000;
+            display: block;
+            margin: 0px auto 10px;
+        }
+    
+    </style>
+    
+</head>
+
+<body>
+    <div class="outside">
+        <form id="upload">
+            <input type="text" placeholder="请输入姓名" id="name">
+            <div class="img-site">
+                <img id="preview" src="" >
+            </div>
+            <div class="box">
+                <span>选择图片</span>
+                <input type="file" name="file" class="input-file" id="getFile" onchange="setImagePreview()">
+            </div>
+        </form>
+        <input type="submit" value="上传" class="input_sumbit">
+    </div>
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <script src="../js/dream-msg.min.js"></script>
+    <script>
+        let fileName = "";
+
+        // 压缩图片
+        function compress (img, width, height, ratio) {
+            let canvas, ctx, img64;
+            canvas = document.createElement('canvas')
+            canvas.width = width;
+            canvas.height = height;
+            ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            img64 = canvas.toDataURL("image/jpeg", ratio);
+            return img64;
+        }
+
+        function setImagePreview() {
+            
+            let file = document.querySelector('input[type=file]').files[0] // 获取选择的文件，这里是图片类型
+            fileName = file.name
+            let reader = new FileReader()
+            reader.readAsDataURL(file) //读取文件并将文件以URL的形式保存在resulr属性中 base64格式
+            reader.onload = (e) => { // 文件读取完成时触发
+                let result = e.target.result // base64格式图片地址
+                var image = new Image()
+                image.src = result // 设置image的地址为base64的地址
+                image.onload = () => { // 图片加载完成后才能进行压缩处理，从而转换为base64 进行赋值
+                    let width = image.width // 图片宽度
+                    let height = image.height
+                    let dataUrl = compress(image, width, height, 0.7)
+
+                    let imgObjPreview = document.getElementById("preview")
+                    imgObjPreview.src = dataUrl
+                }
+            }          
+            $(".box").hide()
+        }
+
+        function verify_img(){
+            let Img = document.getElementById("preview");
+            let fileType = /(\.gif|\.jpeg|\.png|\.jpg|\.bmp)/i;
+
+            // 未选择图片
+            if(Img.src==="") {
+                Dreamer.warning("请选择图片",0);
+                return false;
+            // 是否为图片
+            } else if(!fileType.test(fileName)){
+                Dreamer.warning("请选择正确的文件",0);
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function verify_name() {
+            let name = $("#name").val()
+            let nameReg =  /^[\u4E00-\u9FA5]{2,4}$/;
+            if(nameReg.test(name)) {
+                return true;
+            } else {
+                Dreamer.warning("名字输错了，憨憨！",0);
+                return false;
+            }
+        }
+
+        $(".input_sumbit").click(()=>{
+            if (verify_img() && verify_name()) {
+                Dreamer.loading("正在提交，请稍后")
+                let formData=new FormData()
+                let id = window.location.search.split("=")[1]
+                console.log(id)
+                let name = $("#name").val()
+                console.log(name)
+                let img = document.getElementById("preview").src
+
+                const bytes = window.atob(img.split(',')[1])
+                // 处理异常,将ascii码小于0的转换为大于0
+                const ab = new ArrayBuffer(bytes.length)
+                const ia = new Uint8Array(ab)
+                for (let i = 0; i < bytes.length; i++) {
+                    ia[i] = bytes.charCodeAt(i)
+                }
+                file = new Blob([ab], {type : 'image/jpeg'})
+
+
+                // console.log(img)
+                formData.append("id",id)
+                formData.append("img",file)
+                formData.append("name",name)
+                $.ajax({
+                    url:"/upload",
+                    type: 'post',
+                    cache: false,               //上传文件不需要缓存
+                    async : true,
+                    data: formData,
+                    processData: false,          // 此处是关键：告诉jQuery不要去处理发送的数据
+                    contentType: false,         // 此处是关键：告诉jQuery不要去设置Content-Type请求头
+                    success: (res)=> {
+                        if (res['ret']===0) {
+                            Dreamer.destroyAll();
+                            Dreamer.success("上传成功",5000)
+                            window.setTimeout(()=> {
+                                    window.location.reload();
+                            },5000)
+                        } else {
+                            Dreamer.destroyAll();
+                            Dreamer.warning(res['msg'],5000)
+                            // 延迟5秒刷新
+                            window.setTimeout(()=> {
+                                    window.location.reload();
+                            },5000)
+                        }
+                    },
+                    error : ()=>{
+                        Dreamer.destroyAll();
+                        Dreamer.warning("网络出了点小问题!<>!",5000);
+                    }
+
+                })
+            }
+        }) 
+
+    </script>
+    
+</body>
+    
+</html>

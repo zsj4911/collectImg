@@ -1,0 +1,17 @@
+.record {
+  position: fixed;
+  bottom: 15px;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.record__img {
+  height: 10px;
+}
+
+.record__text {
+  font-size: 10px;
+  line-height: 10px;
+}

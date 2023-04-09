@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员</title>
+    <link rel="stylesheet" href="../css/mgr.css">
+    <link rel="stylesheet" href="../css/record.css">
+    <style>
+    
+        .addtask{
+            margin: 20px 15px 0px;
+            background-color: #FFF;
+        }
+    
+        .addtask > button {
+            background-color: #FFF;
+            border: 1px solid #589679;
+            padding: 5px 10px;
+            color: #2c2c2c;
+        }
+    
+        .task{
+            display: block;
+            margin: 4px 0px;
+        }
+    
+        .box{
+            margin: 20px 15px 0px;
+            border: 1px solid #589679;
+            padding: 6px 15px;
+        }
+    
+        .btn{
+            margin: 5px 5px 0px 0px;
+            border: 1px solid plum;
+            background-color: #FFF;
+            padding: 3px 8px;
+        }
+
+        .tasklist{
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logout">
+        <button type="button" class="left" id="person_btn">人员管理</button>
+        <button type="button" class="left" id="task_btn">任务管理</button>
+        <button type="button" id="logout_btn">注销登录</button>
+    </div>
+    <div class="addtask">
+        <button type="button">+ 新建任务</button>
+    </div>
+    <div class="tasklist">
+
+    </div>
+    
+    <script src="../js/jquery-3.6.1.min.js"></script>
+    <script src="../js/dream-msg.min.js"></script>
+    <script>
+    
+        $.ajax({
+            url: "/mgr/task?action=list_task",  
+            type: "get", 
+            dataType: 'json',
+            success: (res) => {
+                
+                if (res['ret'] === '0') {
+                    list_task = res['retlist']
+                
+                    for (let i = 0; i < list_task.length; i++) {
+                        task = list_task[i];
+                        let span_id = $("<span></span>").text("编号: " + task['id'])
+                        let span_title = $("<span></span>").text("标题: " + task['title'])
+                        
+                       
+                        let btn_item = $("<button></button>").text("详情")
+                        let btn_del = $("<button></button>").text("删除")
+                        
+                      
+                        btn_del.addClass("btn")
+                        btn_item.addClass("btn")
+    
+                        
+                        btn_del.attr("type","button")
+                        btn_item.attr("type","button")
+    
+                    
+                        btn_item.attr("uid",task['id'])
+                        btn_del.attr("uid",task['id'])
+    
+                        btn_item.click(()=>{
+                            let uid = btn_item.attr("uid")
+                            console.log(uid)
+                            window.location.href = "./taskdetail.html?id=" + uid
+                        })
+                        
+                        btn_del.click(()=> {
+                            if(confirm("确认删除吗？")) {
+                                let uid = btn_del.attr("uid")
+                                console.log(uid)
+                               
+                                data = {"action":"del_task","id":uid}
+                                $.ajax({
+                                    url: "/mgr/task",  
+                                    type: "delete",  
+                                    dataType: 'json',  
+                                    data:JSON.stringify(data),
+                                    success: (res) => {  
+                                        alert("删除成功")
+                                        setTimeout(()=>{
+                                            window.location.reload();
+                                        },1000)
+                                    },
+                                    error:(res)=>{  
+                                        alert("网络跑丢了！！！")
+                                    }
+                                })
+                            }
+                        })
+    
+                        span_id.addClass("task")
+                        span_title.addClass("task")
+    
+                        var task = $("<div></div>")
+    
+                        task.addClass("box")
+    
+                        task.append(span_id)
+                        task.append(span_title)
+                        task.append(btn_item)
+                        task.append(btn_del)
+                        
+                        $(".tasklist").append(task)
+                    }
+                } else {
+                    alert(res['msg'])
+                }
+    
+            },
+            error:(res)=>{ 
+                console.log(res.responseJSON)
+                if (res.responseJSON['ret'] === 302) {
+                    $("html").hide()
+                    setTimeout(()=>{
+                        alert(res.responseJSON['msg'])
+                    },200)
+                }
+            }
+        })
+    
+    
+        $("#person_btn").click(()=>{
+                window.location.href = "person.html"
+        })
+    
+        $("#task_btn").click(()=>{
+            window.location.href = "task.html"
+        })
+    
+        $("#logout_btn").click(function () {
+            $.ajax({
+                url: "/mgr/signout",  
+                type: "get",  
+                dataType: 'json', 
+                success: (res) => { 
+                    alert("退出成功")
+                    window.location.href = "../login.html"
+                },
+                error:(res)=>{ 
+                    alert("网络除了点小问题呢^_^");
+                }
+            })
+        })
+    
+        $(".addtask > button").click(()=>{
+            window.location.href = "addtask.html"
+        })
+    
+    </script>
+    
+    
+</body>
+
+</html>

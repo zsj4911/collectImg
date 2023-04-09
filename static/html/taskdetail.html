@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情</title>
+    <link rel="stylesheet" href="../css/record.css">
+    
+    <style>
+        .task{
+            display: block;
+            margin: 4px 0px;
+        }
+    
+        .box{
+            margin: 20px 15px 0px;
+            border: 1px solid #99CCCC;
+            padding: 6px 15px;
+        }
+    
+        .submitted_name{
+            width: 50px;
+            height: 30px;
+            line-height: 30px;
+            border: 1px solid #FFCCCC;
+            border-radius: 5px;
+            margin: 5px 5px 2px 0px;
+            padding: 2px 10px;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn{
+            width: 100px;
+            height: 40px;
+            margin: 10px;
+            border: 1px solid pink;
+            background-color: #FFF;
+            border-radius: 5px;
+        }
+    
+    </style>
+    
+</head>
+
+<body>
+    <div id="task">
+
+    </div>
+
+    <div id="submitted">
+        
+    </div>
+
+    <div id="unsubmitted">
+
+    </div>
+    
+    <div id="download">
+
+    </div>
+    
+    <script src="../js/jquery-3.6.1.min.js"></script>
+<script>
+    let id = window.location.search.split("=")[1]
+    let data = {"action":"task_details","id":id}
+    $.ajax({
+        url:"/mgr/task",
+        type:'post',
+        dataType:"json",
+        data:JSON.stringify(data),
+        success:(res)=>{
+            if (res['ret']===0) {
+
+                let span_id = $("<span></span>").text("编号: " + res['id'])
+                let span_title = $("<span></span>").text("标题: " + res['title'])
+
+
+                span_id.addClass("task")
+                span_title.addClass("task")
+
+                let task = $("#task")
+                task.addClass("box")
+                task.append(span_id)
+                task.append(span_title)
+
+
+                let submitted = $("#submitted")
+                submitted.addClass("box")
+                let span_submitted = $("<span></span>").text("已提交人员：")
+                span_submitted.addClass("task")
+                submitted.append(span_submitted)
+
+                res['submitted'].forEach(element => {
+
+                    let list_name = $("<span></span>").text(element)
+                    list_name.addClass("submitted_name")
+                    submitted.append(list_name)
+                });
+
+ 
+                let unsubmitted = $("#unsubmitted")
+                unsubmitted.addClass("box")
+                let span_unsubmitted = $("<span></span>").text("未提交人员：")
+                span_unsubmitted.addClass("task")
+                unsubmitted.append(span_unsubmitted)
+                console.log(res['unsubmitted'])
+                res['unsubmitted'].forEach(element => {
+                   
+                    let list_name = $("<span></span>").text(element)
+                    list_name.addClass("submitted_name")
+                    unsubmitted.append(list_name)
+                });
+                
+                // 下载功能
+                let download = $("#download")
+                download.addClass("box")
+                let all_download = $("<button></button>").text("下载全部图片")
+                let info_download = $("<button></button>").text("统计信息下载")
+                all_download.addClass("btn")
+                info_download.addClass("btn")
+                download.append(all_download)
+                download.append(info_download)
+            }
+            
+            $("button:first").click(()=>{
+                let form = $("<form action='/download?action=all&id=" + id + "' method='post'></form>");
+                $('body').append(form);
+                form.submit(); //自动提交
+            })
+
+            $("button:last").click(()=>{
+                url = "/download?action=info"
+                let form = $("<form action='/download?action=info&id=" + id + "' method='post'></form>");
+                $('body').append(form);
+                form.submit(); //自动提交
+            })
+
+        },
+        error:(res)=>{
+            if(res.responseJSON['ret'] === 302){
+                alert(res.responseJSON['msg'])
+                window.location.href = res.responseJSON['redirect']
+            }
+        }
+    })
+</script>
+    
+</body>
+
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理系统</title>
+</head>
+<style>
+
+    .title{
+        text-align: center;
+        color: pink;
+        margin-top:180px;
+        font-size: 30px;
+    }
+
+    #username,#password,#submit{
+        width: 280px;
+        margin: 20px auto 0px;
+        display: block;
+        height: 36px;
+        border-radius: 5px;
+        border: 1px solid plum;
+        padding-left: 8px;
+    }
+
+    #submit{
+        color:#fff;
+        font-size: 15px;
+        height: 40px;
+        background-color: #0096fa;
+        border: 1px solid #0096fa;
+        text-align: center;
+    }
+</style>
+<body>
+    <div class="title">欢迎登录</div>
+    <input type="text" id="username" placeholder="账号">
+    <input type="password" id="password" placeholder="密码">
+    <button type="submit" id="submit">登录</button>
+</body>
+<script src="./js/jquery-3.6.1.min.js"></script>
+<script>
+
+    $("#submit").click(function (){
+        var username = $("#username").val()
+        var password = $("#password").val()
+        $.ajax({
+            url: "/mgr/signin",  // 发送的路径
+            type: "post",  // 发送方式
+            dataType: 'json',  // 数据格式
+            // async:false,
+            data:{
+                "username":username,
+                "password":password
+            },  // 发送的数据
+            success: (res) => {  // 成功获取到后端返回结果的回调函数
+                if (res['ret'] === 0) {
+                    window.location.href = "./html/person.html";
+                } else {
+                    alert(res['msg'])
+                }
+            },
+            error:(res)=>{  // 发送失败的回调函数
+                alert("服务器太繁忙啦(^_^)");
+            }
+        })
+    })
+</script>
+</html>
